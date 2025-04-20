@@ -1,0 +1,8 @@
+theme = "GitHub-Dark-High-Contrast"
+
+# Unfocused pane settings
+unfocused-split-opacity = 0.5
+unfocused-split-fill = #000000
+
+# Optional: Change the split divider color (for clarity)
+split-divider-color = #FF0000
