@@ -1,0 +1,27 @@
+## ---- Shell environment (safe for non-interactive shells) ----
+
+# Homebrew (Apple Silicon + Intel fallback)
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Local bin folder
+export PATH="$HOME/.local/bin:$PATH"
+
+# Go
+export GOPATH="$HOME/go"
+export PATH="$HOME/go/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+
+# Windsurf
+export PATH="$HOME/.codeium/windsurf/bin:$PATH"
+
+# opencode
+export PATH="$HOME/.opencode/bin:$PATH"
+
+# Python (Homebrew)
+export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:$PATH"
+
+# ------------------------------------------------------------- zshprofile
+
