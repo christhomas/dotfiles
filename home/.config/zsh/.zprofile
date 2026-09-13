@@ -20,9 +20,8 @@ path=(
   "$HOME/go/bin"                              # Go
   "$PNPM_HOME"                                # pnpm
   "$HOME/.bun/bin"                            # bun
-  "$HOME/.opencode/bin"                       # opencode
   "$HOME/.codeium/windsurf/bin"               # Windsurf
-  /opt/homebrew/opt/python@3.11/libexec/bin   # Homebrew Python 3.11 (unversioned names)
+  /opt/homebrew/opt/python@3/libexec/bin      # Homebrew Python: unversioned python/pip
   /opt/homebrew/bin                           # Homebrew (Apple Silicon)
   /usr/local/bin                              # Homebrew (Intel fallback)
   $path
