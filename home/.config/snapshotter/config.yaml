@@ -1,0 +1,43 @@
+# Snapshotter settings. Edit freely: a running Snapshotter notices the change
+# and applies it, and it writes this file back when a setting changes in the window.
+#
+# Two things do not change under a running application, because they are not
+# Snapshotter's to change: a snapshot that is already mounted stays where it is,
+# and an installed scheduled task keeps writing to the log named in the copy
+# launchd holds until that task is installed again.
+#
+# This records what was ASKED FOR. Whether the schedule is actually installed and
+# running is a question for launchd, which the Health screen answers.
+schedule:
+    enabled: true
+    interval_hours: 24
+    retention_days: 14
+    policy: tiered-weekly-monthly
+    at_hour: -1
+tripwire:
+    enabled: false
+    watch: []
+    ignore:
+        - /Library/Caches/
+        - /Caches/
+        - /private/var/folders/
+        - /.Trash/
+    sensitivity: balanced
+appearance:
+    theme: dark
+    language: en
+logging:
+    verbose: false
+window:
+    width: 1180
+    height: 780
+refresh:
+    menu_bar_seconds: 60
+    window_seconds: 30
+paths:
+    mount_root: ""
+    log: ""
+    tripwire_log: ""
+change_detection:
+    ignore:
+        - node_modules

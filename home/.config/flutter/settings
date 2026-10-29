@@ -1,0 +1,5 @@
+{
+  "android-sdk": "/Users/christhomas/Library/Android/sdk",
+  "jdk-dir": "/opt/homebrew/opt/openjdk@21",
+  "enable-native-assets": true
+}

@@ -1,0 +1,16 @@
+{
+  "trustedtaps": [
+    "antimatter-studios/tap"
+  ],
+  "trustedformulae": [
+    "antimatter-studios/tap/chore",
+    "antimatter-studios/tap/rust-fs-ext4",
+    "antimatter-studios/tap/rust-lzo1x",
+    "antimatter-studios/tap/trove-cli",
+    "antimatter-studios/tap/virtiofsd"
+  ],
+  "trustedcasks": [
+    "antimatter-studios/tap/pullbar",
+    "antimatter-studios/tap/trove-desktop"
+  ]
+}

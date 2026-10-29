@@ -1,0 +1,31 @@
+{
+  "description": "The Tools Configuration file",
+  "type": "system",
+  "version": "3",
+  "ip_address": "10.254.254.254",
+  "dns": {
+    "docker_image": "ghcr.io/antimatter-studios/docker-dns@sha256:462da637622474907fd897fa8e2b00b1a074b2a1c59d33e6f9878630b44d07dc",
+    "container_name": "ddt-dns",
+    "port": 10053,
+    "tlds": [
+      "localhost"
+    ]
+  },
+  "proxy": {
+    "docker_image": "ghcr.io/antimatter-studios/docker-proxy@sha256:01b7e7ce15b8cf7dde00345c0bfd725d92caad5edf887ea67a1fbc914ae4809d",
+    "container_name": "ddt-proxy"
+  },
+  "config_gen": {
+    "docker_image": "ghcr.io/antimatter-studios/docker-config-gen@sha256:4e5ff0ecdea4bc77f648a2640a40cdc5ae187a9b7405047262dc308041012d35",
+    "container_name": "ddt-config-gen"
+  },
+  "projects": {
+    "paths": {},
+    "list": {}
+  },
+  "self_update": {
+    "timeout": 0,
+    "period": "+7 day",
+    "enabled": true
+  }
+}

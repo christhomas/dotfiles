@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Run a trove command against the default vault, feeding the password from
+# ~/.config/trove/env on stdin.
+#
+# The password is never an argument (argv is visible in `ps`), never echoed,
+# and never exported — it exists only on this process's stdin pipe.
+#
+#   ~/.config/trove/vault list --json
+#   ~/.config/trove/vault show "Semdatex/inpace build"
+set -euo pipefail
+ENV_FILE="${TROVE_ENV_FILE:-$HOME/.config/trove/env}"
+[[ -r "$ENV_FILE" ]] || { echo "no readable $ENV_FILE" >&2; exit 1; }
+# shellcheck disable=SC1090
+. "$ENV_FILE"
+: "${TROVE_DB_PASSWORD:?TROVE_DB_PASSWORD not set in $ENV_FILE}"
+VAULT="${TROVE_VAULT:-$HOME/Library/Mobile Documents/com~apple~CloudDocs/christhomas/christhomas.kdbx}"
+printf '%s\n' "$TROVE_DB_PASSWORD" | trove "$@" --vault "$VAULT" --password-stdin

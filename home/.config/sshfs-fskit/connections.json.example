@@ -1,0 +1,16 @@
+[
+  {
+    "host": "myserver.com",
+    "port": 22,
+    "username": "chris",
+    "remote_path": "/home/chris",
+    "label": "My Server"
+  },
+  {
+    "host": "raspberry-pi.local",
+    "port": 22,
+    "username": "pi",
+    "remote_path": "/",
+    "label": "Raspberry Pi"
+  }
+]

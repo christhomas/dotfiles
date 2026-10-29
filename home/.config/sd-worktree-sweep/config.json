@@ -1,0 +1,11 @@
+{
+  "root": "/Volumes/sdcard256gb/projects",
+  "extra_repos": ["/Users/christhomas/projects/inpace/sdx-source-InPace"],
+  "skip_repos": ["pkg-sftp", "homelab-server", "agent-tv-gitea", "antimatter-vps"],
+  "grace_hours": 24,
+  "max_file_mb": 20,
+  "deadline_minutes": 120,
+  "github_key_fingerprint": "SHA256:e0qHA9BShBoP3t16PSwY6HoJtUJXkWif1rXX+64WV4w",
+  "t3_state_db": "/Users/christhomas/.t3/userdata/statev2.sqlite",
+  "secret_name_patterns": [".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "*.kdbx", "id_rsa*", "id_ed25519*", "id_ecdsa*", "credentials*", "*.keychain*"]
+}
