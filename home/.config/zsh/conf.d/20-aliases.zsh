@@ -9,3 +9,6 @@ else
 fi
 
 alias claude-mem='bun "$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
+alias claude-ct='CLAUDE_CONFIG_DIR="$HOME/.claude-ct" claude'
+alias claude-wk='CLAUDE_CONFIG_DIR="$HOME/.claude-wk" claude'
+

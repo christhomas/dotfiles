@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+FILE="${1:-}"
+
+PREFERENCES_FILE="$HOME/.dotfiles/preferences.json"
+
+if [[ -z "$FILE" ]]; then
+  echo "Usage: open-in-nvim <file>" >&2
+  exit 2
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Missing dependency: jq" >&2
+  exit 127
+fi
+
+TERMINAL_APP=""
+if [[ -f "$PREFERENCES_FILE" ]]; then
+  TERMINAL_APP="$(jq -r '."terminal-app" // empty' "$PREFERENCES_FILE" 2>/dev/null || true)"
+fi
+
+if [[ -z "$TERMINAL_APP" ]]; then
+  TERMINAL_APP="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+fi
+
+case "$TERMINAL_APP" in
+  Ghostty)
+    TERMINAL_BIN="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+    ;;
+  *.app)
+    TERMINAL_BIN=""
+    if [[ -f "$TERMINAL_APP/Contents/Info.plist" ]]; then
+      APP_EXE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$TERMINAL_APP/Contents/Info.plist" 2>/dev/null || true)"
+      if [[ -n "$APP_EXE" && -x "$TERMINAL_APP/Contents/MacOS/$APP_EXE" ]]; then
+        TERMINAL_BIN="$TERMINAL_APP/Contents/MacOS/$APP_EXE"
+      fi
+    fi
+
+    if [[ -z "$TERMINAL_BIN" ]]; then
+      echo "Unable to resolve terminal binary from app bundle: $TERMINAL_APP" >&2
+      exit 1
+    fi
+    ;;
+  /*)
+    TERMINAL_BIN="$TERMINAL_APP"
+    ;;
+  *)
+    echo "Unsupported terminal-app: $TERMINAL_APP" >&2
+    exit 1
+    ;;
+esac
+
+if [[ ! -x "$TERMINAL_BIN" ]]; then
+  echo "Terminal binary not found/executable: $TERMINAL_BIN" >&2
+  exit 127
+fi
+
+"$TERMINAL_BIN" \
+  --working-directory "$(dirname "$FILE")" \
+  --command "nvim \"$FILE\""

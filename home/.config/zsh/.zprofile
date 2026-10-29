@@ -11,6 +11,9 @@ export VISUAL="$EDITOR"
 export GOPATH="$HOME/go"
 export PNPM_HOME="$HOME/Library/pnpm"
 
+# Oh My Pi config root; data/state/cache follow the XDG vars from ~/.zshenv.
+export PI_CONFIG_DIR=".config/ohmypi"
+
 # ── PATH ─────────────────────────────────────────────────
 # path is tied to PATH; -U keeps it deduplicated (first occurrence wins).
 typeset -U path PATH

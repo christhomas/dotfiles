@@ -1,0 +1,17 @@
+[user]
+	email = chris.thomas@antimatter-studios.com
+	name = Chris Thomas
+	signingkey = C2515F7A5409DEED
+[safe]
+	directory = /Users/christhomas/projects/inpace/sdx-source-InPace
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[gpg]
+	format = openpgp
+	program = /Users/christhomas/.local/bin/trove-gpg
+[credential]
+	helper = !trove git-credential --vault ~/diskjockey/homelab/docs/christhomas.kdbx --env

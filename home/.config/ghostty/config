@@ -3,7 +3,7 @@
 theme = Argonaut
 term = xterm-256color
 
-font-size = 11
+font-size = 14
 font-thicken = true
 
 clipboard-read = allow
@@ -18,7 +18,7 @@ selection-foreground = #ffffff
 cursor-color = #ff0018
 cursor-text = #ff8ca4
 
-palette = 0=#232323
+palette = 0=#000000
 palette = 1=#ff000f
 palette = 2=#8ce10b
 palette = 3=#ffb900

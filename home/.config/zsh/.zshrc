@@ -11,3 +11,6 @@ unset _zrc
 
 # Per-machine overrides (not tracked by dotman). Loaded last so it wins.
 [ -f "$ZDOTDIR/.zshrc.local" ] && source "$ZDOTDIR/.zshrc.local"
+
+# bun completions
+[ -s "/Users/christhomas/.bun/_bun" ] && source "/Users/christhomas/.bun/_bun"

@@ -5,6 +5,16 @@ return {
     opts = require "configs.conform",
   },
 
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      ensure_installed = {
+        "codelldb",
+      },
+    },
+  },
+
   -- These are some examples, uncomment them if you want to see them work!
   {
     "neovim/nvim-lspconfig",
@@ -18,17 +28,24 @@ return {
     version = '^5', -- Recommended
     lazy = false, -- This plugin is already lazy  
     ft = "rust",
+    dependencies = { "WhoIsSethDaniel/mason-tool-installer.nvim" },
     config = function ()
-      local mason_registry = require('mason-registry')
-      local codelldb = mason_registry.get_package("codelldb")
-      local extension_path = codelldb:get_install_path() .. "/extension/"
-      local codelldb_path = extension_path .. "adapter/codelldb"
-      local liblldb_path = extension_path.. "lldb/lib/liblldb.dylib"
-      local cfg = require('rustaceanvim.config')
+      local adapter_path = vim.fn.expand("$MASON/packages/codelldb/extension/adapter/codelldb")
+      if vim.fn.executable(adapter_path) == 0 then
+        vim.notify("codelldb not installed — run :MasonInstall codelldb", vim.log.levels.WARN)
+        return
+      end
 
       vim.g.rustaceanvim = {
         dap = {
-          adapter = cfg.get_codelldb_adapter(codelldb_path, liblldb_path),
+          adapter = {
+            type = "server",
+            port = "${port}",
+            executable = {
+              command = adapter_path,
+              args = { "--port", "${port}" },
+            },
+          },
         },
       }
     end
