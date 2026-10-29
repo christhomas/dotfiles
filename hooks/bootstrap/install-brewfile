@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# === 2. Install packages from Brewfile ===
+BREWFILE="$ROOT_DIR/home/.Brewfile"
+
+if [[ -f "$BREWFILE" ]]; then
+  banner_start "Brewfile"
+  info "Installing packages from ${BREWFILE}..."
+  brew bundle --file="$BREWFILE"
+  banner_ok "Brewfile applied."
+else
+  banner_start "Brewfile"
+  banner_fail "No .Brewfile found at $BREWFILE"
+  return 1
+fi

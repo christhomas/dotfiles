@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+banner_start "Keyboard"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  banner_skip "Not macOS."
+  return 0
+fi
+
+PLISTBUDDY="/usr/libexec/PlistBuddy"
+PLIST_FILE="$HOME/Library/Preferences/com.apple.symbolichotkeys.plist"
+
+HOTKEY_MOVE_LEFT_SPACE_ID=79
+HOTKEY_MOVE_RIGHT_SPACE_ID=81
+
+KEYCODE_LEFT_ARROW=123
+KEYCODE_RIGHT_ARROW=124
+
+MODIFIER_OPTION=524288
+
+pb() {
+  "$PLISTBUDDY" -c "$1" "$PLIST_FILE" >/dev/null
+}
+
+configure_symbolic_hotkey() {
+  local id="$1"
+  local keycode="$2"
+  local modifiers="$3"
+
+  if [[ ! -x "$PLISTBUDDY" ]]; then
+    banner_fail "Missing PlistBuddy at $PLISTBUDDY"
+    return 1
+  fi
+
+  defaults read com.apple.symbolichotkeys >/dev/null 2>&1 || true
+
+  "$PLISTBUDDY" -c "Delete :AppleSymbolicHotKeys:$id" "$PLIST_FILE" >/dev/null 2>&1 || true
+
+  pb "Add :AppleSymbolicHotKeys:$id dict"
+  pb "Add :AppleSymbolicHotKeys:$id:enabled bool true"
+  pb "Add :AppleSymbolicHotKeys:$id:value dict"
+  pb "Add :AppleSymbolicHotKeys:$id:value:parameters array"
+  pb "Add :AppleSymbolicHotKeys:$id:value:parameters:0 integer 65535"
+  pb "Add :AppleSymbolicHotKeys:$id:value:parameters:1 integer $keycode"
+  pb "Add :AppleSymbolicHotKeys:$id:value:parameters:2 integer $modifiers"
+  pb "Add :AppleSymbolicHotKeys:$id:value:type string standard"
+}
+
+info "Configuring Space switching shortcuts"
+
+configure_symbolic_hotkey "$HOTKEY_MOVE_LEFT_SPACE_ID" "$KEYCODE_LEFT_ARROW" "$MODIFIER_OPTION"
+configure_symbolic_hotkey "$HOTKEY_MOVE_RIGHT_SPACE_ID" "$KEYCODE_RIGHT_ARROW" "$MODIFIER_OPTION"
+
+info "Configuring keyboard repeat rate"
+
+# Fastest repeat and shortest delay the Keyboard settings sliders allow.
+# Values below these (e.g. 0/1) make every keypress repeat at login.
+# Written to the global domain, as System Settings does; a ByHost copy
+# would take precedence over it, so remove any left by older runs.
+defaults -currentHost delete -g KeyRepeat 2>/dev/null || true
+defaults -currentHost delete -g InitialKeyRepeat 2>/dev/null || true
+defaults write -g KeyRepeat -int 2
+defaults write -g InitialKeyRepeat -int 15
+
+info "Configuring text replacements"
+
+defaults -currentHost write -g NSUserDictionaryReplacementItems -array-add \
+    '{ on = 1; replace = "shruggie"; with = "¯\_(ツ)_/¯"; }'
+
+info "Configuring mouse tap behavior"
+defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -bool true
+
+killall SystemUIServer
+killall cfprefsd
+killall Dock
+
+banner_ok "Keyboard shortcuts and repeat rate configured."

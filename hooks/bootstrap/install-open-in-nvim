@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+banner_start "Open in Neovim"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  banner_skip "Not macOS."
+  return 0
+fi
+
+NVIM_OPENER="$HOME/.local/bin/open-in-nvim"
+
+MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$MODULE_DIR/../.." && pwd)"
+SOURCE_APP_DIR="$REPO_ROOT/apps/Open in Neovim.app"
+
+if ! command -v jq >/dev/null 2>&1; then
+  info "Installing jq..."
+  brew install jq
+fi
+
+BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$SOURCE_APP_DIR/Contents/Info.plist" 2>/dev/null || true)"
+if [[ -z "$BUNDLE_ID" ]]; then
+  banner_fail "Failed to read CFBundleIdentifier from $SOURCE_APP_DIR/Contents/Info.plist"
+  return 1
+fi
+
+if [[ ! -d "$SOURCE_APP_DIR" ]]; then
+  banner_fail "Missing app bundle in repo: $SOURCE_APP_DIR"
+  return 1
+fi
+
+DEST_ROOT="$HOME/Applications"
+DEST_APP_DIR="$DEST_ROOT/Open in Neovim.app"
+
+mkdir -p "$DEST_ROOT" 2>/dev/null || true
+
+if [[ -w "$DEST_ROOT" || ! -e "$DEST_ROOT" ]]; then
+  info "Installing app to $DEST_ROOT"
+  rm -rf "$DEST_APP_DIR"
+  cp -R "$SOURCE_APP_DIR" "$DEST_APP_DIR"
+else
+  DEST_ROOT="/Applications"
+  DEST_APP_DIR="$DEST_ROOT/Open in Neovim.app"
+  info "Installing app to $DEST_ROOT"
+  sudo rm -rf "$DEST_APP_DIR"
+  sudo cp -R "$SOURCE_APP_DIR" "$DEST_APP_DIR"
+fi
+
+if [[ -w "$DEST_APP_DIR/Contents/MacOS/run" ]]; then
+  chmod +x "$DEST_APP_DIR/Contents/MacOS/run" || true
+else
+  sudo chmod +x "$DEST_APP_DIR/Contents/MacOS/run" || true
+fi
+
+if ! command -v duti >/dev/null 2>&1; then
+  info "Installing duti..."
+  brew install duti
+fi
+
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+if [[ -x "$LSREGISTER" ]]; then
+  "$LSREGISTER" -f "$DEST_APP_DIR" >/dev/null 2>&1 || true
+fi
+
+duti -s "$BUNDLE_ID" .md all
+
+banner_ok "Configured .md to open via Open in Neovim.app"

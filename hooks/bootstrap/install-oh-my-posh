@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# === Install oh-my-posh if missing ===
+banner_start "Oh My Posh"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  banner_skip "Not macOS."
+  return 0
+fi
+
+if ! command -v oh-my-posh >/dev/null 2>&1; then
+  banner_skip "oh-my-posh not found (expected to be installed via Brewfile)."
+  return 0
+fi
+
+OMP_BIN="$(command -v oh-my-posh)"
+
+if xattr -p com.apple.quarantine "${OMP_BIN}" &>/dev/null; then
+  info "Removing quarantine from oh-my-posh..."
+  xattr -d com.apple.quarantine "${OMP_BIN}"
+  banner_ok "oh-my-posh unquarantined."
+else
+  info "oh-my-posh is already unquarantined."
+  banner_ok "oh-my-posh ready."
+fi

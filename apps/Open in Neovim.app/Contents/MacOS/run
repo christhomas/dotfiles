@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+NVIM_OPENER="$HOME/.local/bin/open-in-nvim"
+
+for f in "$@"
+do
+  if [[ ! -x "$NVIM_OPENER" ]]; then
+    echo "Missing executable: $NVIM_OPENER" >&2
+    exit 127
+  fi
+  "$NVIM_OPENER" "$f"
+done

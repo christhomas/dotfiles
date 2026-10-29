@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+banner_start "Claude"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  banner_skip "Not macOS."
+  return 0
+fi
+
+if ! command -v claude >/dev/null 2>&1; then
+  banner_fail "Claude CLI not found. Please install it first."
+  return 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  banner_fail "jq not found. Please install it first."
+  return 1
+fi
+
+MARKETPLACES_JSON="$(claude plugin marketplace list --json 2>/dev/null || true)"
+HAS_THEDOTMACK=""
+if [[ -n "$MARKETPLACES_JSON" ]]; then
+  HAS_THEDOTMACK="$(printf '%s' "$MARKETPLACES_JSON" | jq -r 'map(select(.repo == "thedotmack/claude-mem" or .name == "thedotmack")) | length' 2>/dev/null || echo 0)"
+fi
+
+if [[ "$HAS_THEDOTMACK" == "0" || -z "$HAS_THEDOTMACK" ]]; then
+  info "Adding claude-mem plugin marketplace..."
+  claude plugin marketplace add thedotmack/claude-mem
+else
+  info "Plugin marketplace already added: thedotmack"
+fi
+
+PLUGINS_JSON="$(claude plugin list --json 2>/dev/null || true)"
+HAS_CLAUDE_MEM=""
+if [[ -n "$PLUGINS_JSON" ]]; then
+  HAS_CLAUDE_MEM="$(printf '%s' "$PLUGINS_JSON" | jq -r 'map(select(.id == "claude-mem@thedotmack" or (.id | startswith("claude-mem@")))) | length' 2>/dev/null || echo 0)"
+fi
+
+if [[ "$HAS_CLAUDE_MEM" == "0" || -z "$HAS_CLAUDE_MEM" ]]; then
+  info "Installing claude-mem plugin..."
+  claude plugin install claude-mem
+else
+  info "Plugin already installed: claude-mem"
+fi
+
+banner_ok "Claude configured."

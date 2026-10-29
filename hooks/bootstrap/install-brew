@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# === 1. Install Homebrew if missing ===
+if ! command -v brew >/dev/null 2>&1; then
+  banner_start "Homebrew"
+  info "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Add brew to PATH (macOS or Linux)
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  fi
+
+  banner_ok "Homebrew installed."
+else
+  banner_start "Homebrew"
+  info "Homebrew is already installed."
+  banner_ok "Homebrew ready."
+fi
