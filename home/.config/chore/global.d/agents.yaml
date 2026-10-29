@@ -1,0 +1,511 @@
+# Coding agents, from any directory:
+#   chore global:agents:quota   every account's quota, scored, cached for 5 minutes
+#   chore global:agents:limit   just the limits: remaining share and reset per window
+#   chore global:agents:next    the account to use next, its effort level, any quota warning
+#                               (--override <account>: always take that one, even out of
+#                               quota, from now on; add --flexible to take it only while
+#                               it has quota; --remove-override: back to the fair pick)
+#   chore global:agents:test    check the scoring and the pick against fixed quota fixtures
+# Profiles live in ../agent-profiles.json. Requires curl, jq and standard shell tools.
+name: agents
+chore_min_version: 0.18.0   # cache: on the usage endpoints
+
+tasks:
+  # Every configured account's quota, best first, for however many accounts exist.
+  # Each account has its windows as the usage APIs report them (five_hour, seven_day:
+  # used_percentage, remaining_percentage, reset_at, reset_date; null if it has none)
+  # and, derived from them:
+  # - pace, in each window: its remaining share over the share of the window left
+  #   before it resets -- 100 is on track to use it all by the reset, above 100 is
+  #   quota that would go unused, below 100 is a window used faster than that;
+  # - score: the lowest pace of the account's windows, so the account with the
+  #   most capacity going spare comes first and every account is used evenly;
+  # - usable: false only when the lookup failed or a window it has is at 0%;
+  # - back_at: when an account out of quota can be used again;
+  # - warning: why it is not usable, with when it is back, or that its numbers are stale.
+  # Sorted usable first, then by score, then by seven_day.
+  #
+  # The usage APIs answer HTTP 429 when asked too often, so each account's answer is
+  # reused for 5 minutes: cache: on claude-usage and codex-usage, which chore keeps per
+  # account and only for an answer that worked. On top of that only a good answer
+  # replaces an account's numbers: its last good one is kept (agents-last-good.json in
+  # chore's cache directory), and an account whose lookup fails is reported with those
+  # numbers, marked stale: {since, error}. It still counts in AGENTS_QUOTA_FAILED.
+  #
+  # quota, limit and next run this as their `before:` hook. It exports the list as
+  # AGENTS_QUOTA (compact JSON) and AGENTS_QUOTA_FAILED (1 if any lookup failed)
+  # for the steps that follow; it always succeeds, so a failed lookup is reported
+  # by the caller rather than refusing the caller's steps.
+  quota-load:
+    internal: true
+    exports: true
+    preconditions:
+      - sh: command -v jq >/dev/null 2>&1
+        msg: 'jq is required; install it and make sure it is on PATH.'
+      - sh: command -v curl >/dev/null 2>&1
+        msg: 'curl is required; install it and make sure it is on PATH.'
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          good_file="${XDG_CACHE_HOME:-$HOME/.cache}/chore/agents-last-good.json"
+          now=$(date +%s)
+          profiles=$("$CHORE_EXE" global:agents:profiles) || exit 1
+          accounts='{}'
+          while IFS="$(printf '\t')" read -r type profile dir; do
+            [ -n "$type" ] || continue
+            account=$("$CHORE_EXE" global:agents:account "$type" "$profile" "$dir") || exit 1
+            accounts=$(printf '%s' "$accounts" | jq --arg t "$type" --arg p "$profile" --argjson a "$account" \
+              '.[$t][$p] = $a') || exit 1
+          done <<EOF
+          $(printf '%s' "$profiles" | jq -r '.[] | [.type, .name, .directory] | @tsv')
+          EOF
+          failed=$(printf '%s' "$accounts" | jq '[.[][] | select(has("error"))] | if length > 0 then 1 else 0 end')
+          # Only good answers update last_good; a failed lookup falls back to it.
+          good='{}'
+          [ -f "$good_file" ] && good=$(jq -c 'if type == "object" then . else {} end' "$good_file" 2>/dev/null)
+          [ -n "$good" ] || good='{}'
+          good=$(printf '%s' "$accounts" | jq -c --argjson good "$good" --argjson now "$now" '
+            reduce (to_entries[] as $t | $t.value | to_entries[] | select(.value | has("error") | not)
+                    | [$t.key, .key, .value]) as [$t, $p, $v]
+              ($good; .[$t][$p] = ($v + {checked_at: $now}))') || exit 1
+          merged=$(printf '%s' "$accounts" | jq -c --argjson good "$good" '
+            with_entries(.key as $t | .value |= with_entries(.key as $p
+              | if (.value | has("error")) and ($good[$t][$p] != null) then
+                  .value = ($good[$t][$p] + {stale: {since: $good[$t][$p].checked_at,
+                                                     error: (.value.error.message // "lookup failed")}})
+                else . end))') || exit 1
+          mkdir -p "$(dirname "$good_file")" &&
+            printf '%s' "$good" > "$good_file.tmp" && chmod 600 "$good_file.tmp" && mv "$good_file.tmp" "$good_file"
+          quota=$(printf '%s\n' "$merged" | "$CHORE_EXE" global:agents:render | "$CHORE_EXE" global:agents:score) || exit 1
+          printf 'AGENTS_QUOTA=%s\n' "$(printf '%s' "$quota" | jq -c .)"
+          printf 'AGENTS_QUOTA_FAILED=%s\n' "$failed"
+
+  # One profile's usage, as one JSON object: {name, config_dir, email, <windows>}, or
+  # {name, config_dir, email, error} when its lookup failed or answered something that
+  # is not JSON. Always exits 0: a failure is data, which quota-load counts.
+  account:
+    internal: true
+    args: [type, profile, dir]
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          usage=$("$CHORE_EXE" "global:agents:$TYPE-usage" "$DIR" 2>/dev/null)
+          ok=$?
+          if ! printf '%s' "$usage" | jq -e 'type == "object"' >/dev/null 2>&1; then
+            usage=$(jq -n --arg d "$DIR" --arg t "$TYPE" \
+              '{config_dir: $d, email: null, error: {message: "\($t) task returned invalid JSON"}}')
+          elif [ "$ok" != 0 ] && ! printf '%s' "$usage" | jq -e 'has("error")' >/dev/null; then
+            usage=$(printf '%s' "$usage" | jq --arg t "$TYPE" '. + {error: {message: "\($t) task failed"}}')
+          fi
+          printf '%s' "$usage" | jq -c --arg t "$TYPE" --arg p "$PROFILE" '{name: "\($t)-\($p)"} + .'
+
+  # Rendered accounts in on stdin ({type: {profile: account}}), scored list out, best
+  # first. See quota-load for what each derived field means.
+  score:
+    internal: true
+    interactive: true  # Reads JSON from the calling task's pipe.
+    cmds:
+      - silent: true
+        cmd: |-
+          jq --argjson now "$(date +%s)" '
+            def win(w): if (w | type) == "object" and (w.remaining_percentage | type) == "number" then w else null end;
+            def pace(len):
+              if . == null then null
+              elif (.reset_at | type) == "number" then
+                (((.reset_at - $now) / len) | if . > 1 then 1 elif . < 0.01 then 0.01 else . end) as $left
+                | .pace = (.remaining_percentage / $left | floor)
+              else .pace = .remaining_percentage end;
+            [ to_entries[] as $t | $t.value | to_entries[] | .value as $v
+              | (win($v.five_hour) | pace(18000)) as $five | (win($v.seven_day) | pace(604800)) as $week
+              | ([$five, $week] | map(select(. != null))) as $windows
+              | ($windows | map(select(.remaining_percentage <= 0))) as $spent
+              | {
+                  account: ($v.name // "\($t.key)-\(.key)"),
+                  type: $t.key,
+                  profile: .key,
+                  config_dir: $v.config_dir,
+                  email: $v.email,
+                  five_hour: $five,
+                  seven_day: $week,
+                  score: ($windows | map(.pace) | min),
+                  usable: ($v.error == null and ($windows | length) > 0 and ($spent | length) == 0),
+                  back_at: ($spent | map(.reset_at // empty) | max),
+                  warning: (if $v.error then "lookup failed: \($v.error.message // "unknown")"
+                            elif $v.stale then
+                              "last lookup failed (\($v.stale.error)); numbers from \((($now - ($v.stale.since // $now)) / 60) | floor) min ago"
+                            elif ($windows | length) == 0 then "no usage window reported"
+                            elif ($spent | length) > 0 then
+                              "out of quota until \($spent | max_by(.reset_at // 0) | .reset_date // "its reset")"
+                            else null end),
+                  error: $v.error,
+                  stale: $v.stale
+                }
+              | .warning //= "no warning"
+              | with_entries(select(.value != null))
+            ] | sort_by((if .usable then 0 else 1 end), -(.score // -1),
+                        -((.seven_day // {remaining_percentage: -1}).remaining_percentage))'
+
+  # Every account's quota, best first, from quota-load: windows with their pace, score,
+  # usable, back_at, warning. Exit 1 if any lookup failed.
+  quota:
+    desc: every agent account's quota, best first, scored and with warnings, as JSON (cached for 5 minutes)
+    before: [{task: quota-load}]
+    cmds:
+      - silent: true
+        cmd: |-
+          printf '%s' "$AGENTS_QUOTA" | jq .
+          exit "$AGENTS_QUOTA_FAILED"
+
+  # Just the limits, from quota-load: for each account, the remaining share and the reset
+  # of each window it has, or the error its lookup gave. Exit 1 if any lookup failed.
+  limit:
+    desc: rate limits per agent account, as JSON (from quota, so cached for 5 minutes)
+    before: [{task: quota-load}]
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          printf '%s' "$AGENTS_QUOTA" | jq '
+            def lim(w): if w == null then null
+                        else {remaining_percentage: w.remaining_percentage, reset_date: w.reset_date}
+                             + (if w.started == false then {started: false} else {} end) end;
+            map({key: .account,
+                 value: (if .error then {error: (.error.message // "lookup failed")}
+                         else {five_hour: lim(.five_hour), seven_day: lim(.seven_day)} | with_entries(select(.value != null))
+                              + (if .stale then {stale_since: .stale.since} else {} end) end)})
+            | from_entries'
+          exit "$AGENTS_QUOTA_FAILED"
+
+  # The account to use next: the first usable account in quota-load (highest score; a tie
+  # goes to the higher seven_day), with the effort level to run it at (high unless
+  # given: `chore global:agents:next medium`) and its warning ("no warning" when there
+  # is none). None usable: only a warning, saying which account is back first and
+  # when, exit 3.
+  # Optional: `chore global:agents:next -- claude` (or codex) to one type.
+  # Optional: `chore global:agents:next --override claude-work` to skew the pick: that
+  # account is always taken, whatever the scores or its quota say (see pick); with
+  # --flexible, only while it has quota. The override is saved in
+  # ../agent-override.json, so every later next uses it too, until
+  # `chore global:agents:next --remove-override` deletes that file and the fair pick is
+  # back. While an override is set, the answer says so with override: true.
+  next:
+    desc: 'the agent account to use next, its effort level (default high) and any quota warning, as JSON (exit 3 when every account is out)'
+    args:
+      - name: effort
+        desc: low|medium|high|xhigh|max (default high)
+      - name: override
+        desc: an account to always use, whatever the scores or its quota say, from now on (e.g. claude-work)
+      - name: flexible
+        type: bool
+        desc: with --override, use that account only while it has quota, and the fair pick otherwise
+      - name: remove_override
+        type: bool
+        desc: forget the override and go back to the fair pick
+    vars:
+      EFFORT: high
+      OVERRIDE: ''
+      FLEXIBLE: 'false'
+      REMOVE_OVERRIDE: 'false'
+    before: [{task: quota-load}]
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          pin=$(printf '%s' "$AGENTS_QUOTA" | "$CHORE_EXE" global:agents:override \
+            OVERRIDE="$OVERRIDE" FLEXIBLE="$FLEXIBLE" REMOVE_OVERRIDE="$REMOVE_OVERRIDE") || exit 1
+          answer=$(printf '%s' "$AGENTS_QUOTA" |
+            "$CHORE_EXE" global:agents:pick EFFORT="$EFFORT" PIN="$pin" WANT='{{.CLI_ARGS}}') || exit 1
+          printf '%s\n' "$answer"
+          printf '%s' "$answer" | jq -e 'has("account")' >/dev/null || exit 3
+
+  # The override next is to use, as JSON: {override: <account>, flexible: true|false},
+  # or {} when none is set. OVERRIDE (with FLEXIBLE) saves one in OVERRIDE_FILE,
+  # REMOVE_OVERRIDE=true deletes the file, and with neither the file is read; a file
+  # without flexible is strict. Scored accounts in on stdin (quota-load's list), so an
+  # account that does not exist is refused, not saved.
+  override:
+    internal: true
+    interactive: true  # Reads JSON from the calling task's pipe.
+    vars:
+      OVERRIDE: ''
+      FLEXIBLE: 'false'
+      REMOVE_OVERRIDE: 'false'
+      OVERRIDE_FILE: '{{.TASKFILE_DIR}}/../agent-override.json'
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          quota=$(cat)
+          if [ -n "$OVERRIDE" ] && [ "$REMOVE_OVERRIDE" = true ]; then
+            echo '--override and --remove-override cannot be used together.' >&2
+            exit 1
+          elif [ "$FLEXIBLE" = true ] && [ -z "$OVERRIDE" ]; then
+            echo '--flexible only goes with --override.' >&2
+            exit 1
+          elif [ "$REMOVE_OVERRIDE" = true ]; then
+            rm -f "$OVERRIDE_FILE" || exit 1
+          elif [ -n "$OVERRIDE" ]; then
+            if ! printf '%s' "$quota" | jq -e --arg a "$OVERRIDE" 'any(.[]; .account == $a)' >/dev/null; then
+              printf 'No account named %s; the accounts are: %s\n' "$OVERRIDE" \
+                "$(printf '%s' "$quota" | jq -r 'map(.account) | join(", ")')" >&2
+              exit 1
+            fi
+            jq -n --arg a "$OVERRIDE" --arg f "$FLEXIBLE" '{override: $a, flexible: ($f == "true")}' \
+              > "$OVERRIDE_FILE.tmp" && mv "$OVERRIDE_FILE.tmp" "$OVERRIDE_FILE" || exit 1
+          fi
+          if [ ! -e "$OVERRIDE_FILE" ]; then
+            echo '{}'
+          else
+            jq -ec '
+              if (.override | type) == "string" and ((.flexible // false) | type) == "boolean"
+              then {override, flexible: (.flexible // false)} else error("invalid") end' \
+              "$OVERRIDE_FILE" 2>/dev/null || {
+                printf 'Invalid override file: %s (expected {"override": "<account>", "flexible": false})\n' \
+                  "$OVERRIDE_FILE" >&2
+                exit 1
+              }
+          fi
+
+  # Scored accounts in on stdin (quota-load's list), next's answer out. The scores are
+  # left as they are: PIN (override's answer) only changes which account is taken. The
+  # override account is taken over the fair pick, even out of quota (its warning then
+  # says until when), and the answer says so with override: true. An override that
+  # cannot be taken (unknown, not of the WANT type, or flexible and out of quota) falls
+  # back to the fair pick, and the warning says why.
+  pick:
+    internal: true
+    interactive: true  # Reads JSON from the calling task's pipe.
+    vars:
+      EFFORT: high
+      PIN: '{}'
+      WANT: ''
+    cmds:
+      - silent: true
+        cmd: |-
+          jq --arg want "$WANT" --arg effort "$EFFORT" --argjson pin "$PIN" '
+            . as $every
+            | ($pin.override // "") as $override
+            | map(select($want == "" or .type == $want)) as $all
+            | ($all | map(select(.usable)) | first) as $fair
+            | ($every | map(select(.account == $override)) | first) as $named
+            | (if $override == "" then null
+               elif $named == null then "no such account"
+               elif $want != "" and $named.type != $want then "not a \($want) account"
+               elif $pin.flexible and ($named.usable | not) then $named.warning
+               else null end) as $refused
+            | (if $override != "" and $refused == null then $named else $fair end) as $use
+            | if $use then
+                {account: $use.account, type: $use.type, effort: $effort,
+                 warning: (if $refused == null then $use.warning
+                           else "override \($override) not used: \($refused)"
+                                + (if $use.warning == "no warning" then "" else "; \($use.warning)" end) end)}
+                + (if $override == "" then {} else {override: true} end)
+              else ($all | map(select(.back_at != null)) | min_by(.back_at)) as $back
+                | {warning: (if $back then "every account is out of quota; \($back.account) is back: \($back.warning)"
+                             else "no account can be used: every lookup failed" end)}
+              end'
+
+  # Run after changing score, pick or override: agents-test.sh feeds them fixed accounts
+  # and checks the order, the pick and the saved override. Needs no tokens and makes no
+  # requests.
+  test:
+    desc: check the account scoring and the pick against fixed quota fixtures
+    cmds:
+      - '{{.TASKFILE_DIR}}/agents-test.sh'
+
+  # Validate the complete profile map before making any requests; expand ~/ here.
+  profiles:
+    internal: true
+    vars:
+      PROFILES_FILE: '{{.TASKFILE_DIR}}/../agent-profiles.json'
+    cmds:
+      - silent: true
+        cmd: |-
+          jq -es --arg home_dir "$HOME" '
+            if length != 1 or (.[0] | type) != "object" then
+              error("expected one map of profile names to type and directory")
+            else .[0] end
+            | to_entries | map(
+                if (.key | test("\\S") | not) then
+                  error("profile names must be nonempty")
+                elif (.value | type) != "object" or (.value | keys) != ["directory", "type"] then
+                  error("\(.key): expected exactly type and directory")
+                elif .value.type != "claude" and .value.type != "codex" then
+                  error("\(.key): type must be claude or codex")
+                elif (.value.directory | type) != "string" then
+                  error("\(.key): directory must be a path")
+                elif (.value.directory | startswith("~/")) then
+                  .value.directory = ($home_dir + "/" + .value.directory[2:])
+                elif (.value.directory | startswith("/")) then .
+                else error("\(.key): directory must be absolute or start with ~/") end
+                | {name: .key, type: .value.type, directory: .value.directory}
+              )' "$PROFILES_FILE" || {
+                printf 'Invalid profile configuration: %s\n' "$PROFILES_FILE" >&2
+                exit 1
+              }
+
+  # Claude's OAuth usage API; token storage is handled by claude-token.
+  claude-usage:
+    internal: true
+    args: [dir]
+    cache: 5m   # one answer per account; only one that worked is kept
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          failed=0
+          email=$(jq -r '.oauthAccount.emailAddress // empty' "$DIR/.claude.json" 2>/dev/null)
+          if ! token=$("$CHORE_EXE" global:agents:claude-token "$DIR" 2>/dev/null); then
+            usage=$(jq -n --arg d "$DIR" '{error: {message: "no OAuth token for \($d)"}}')
+            failed=1
+          elif ! raw=$(printf 'Authorization: Bearer %s\nanthropic-beta: oauth-2025-04-20\n' "$token" |
+                       "$CHORE_EXE" global:agents:usage-fetch https://api.anthropic.com/api/oauth/usage 2>/dev/null); then
+            usage=$raw
+            failed=1
+          elif ! usage=$(printf '%s' "$raw" | jq -e '
+            def epoch: if . == null then null
+                       else sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601 end;
+            if type != "object" or has("error") then error("invalid Claude usage response") else . end
+            | with_entries(select((.key == "five_hour" or (.key | startswith("seven_day")))
+                                  and (.value | type) == "object"
+                                  and .value.utilization != null))
+            | map_values({used_percentage: .utilization, reset_at: (.resets_at | epoch)})'); then
+            usage='{"error":{"message":"invalid Claude usage response"}}'
+            failed=1
+          fi
+          jq -n --arg d "$DIR" --arg e "$email" --argjson u "$usage" '
+            {config_dir: $d, email: (if $e == "" then null else $e end)} + $u' || exit 1
+          exit "$failed"
+
+  # Codex's primary/secondary windows vary by plan; name them by duration.
+  codex-usage:
+    internal: true
+    args: [dir]
+    cache: 5m   # one answer per account; only one that worked is kept
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          failed=0
+          token=$(jq -r '.tokens.access_token // empty' "$DIR/auth.json" 2>/dev/null)
+          account_id=$(jq -r '.tokens.account_id // empty' "$DIR/auth.json" 2>/dev/null)
+          if [ -z "$token" ] || [ -z "$account_id" ]; then
+            usage=$(jq -n --arg d "$DIR" '{email: null, error: {message: "no ChatGPT token in \($d)/auth.json"}}')
+            failed=1
+          elif ! raw=$(printf 'Authorization: Bearer %s\nChatGPT-Account-Id: %s\n' "$token" "$account_id" |
+                       "$CHORE_EXE" global:agents:usage-fetch https://chatgpt.com/backend-api/wham/usage 2>/dev/null); then
+            usage=$(printf '%s' "$raw" | jq '{email: null} + .')
+            failed=1
+          elif ! usage=$(printf '%s' "$raw" | jq -e '
+            def name: if . == 18000 then "five_hour"
+                      elif . == 604800 then "seven_day"
+                      else "window_\(.)s" end;
+            if type != "object" or (.rate_limit | type) != "object"
+              then error("invalid Codex usage response") else . end
+            | {email}
+              + ([.rate_limit.primary_window, .rate_limit.secondary_window]
+                 | map(select(. != null)
+                       | {key: (.limit_window_seconds | name),
+                          value: {used_percentage: .used_percent, reset_at: .reset_at}})
+                 | from_entries)'); then
+            usage='{"email":null,"error":{"message":"invalid Codex usage response"}}'
+            failed=1
+          fi
+          jq -n --arg d "$DIR" --argjson u "$usage" '{config_dir: $d} + $u' || exit 1
+          exit "$failed"
+
+  # GET JSON, or emit {error: {...}} and exit 1. Header lines arrive on stdin,
+  # keeping credentials out of chore's arguments and rendered command text.
+  usage-fetch:
+    internal: true
+    interactive: true  # Chore requires this to forward piped stdin.
+    args: [url]
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          body=$(mktemp) || exit 1
+          trap 'rm -f "$body" "$body.err"' EXIT
+          if ! status=$(curl -sS --max-time 10 -H @- -o "$body" -w '%{http_code}' "$URL" 2>"$body.err"); then
+            jq -n --arg m "usage request failed: $(head -n 1 "$body.err")" '{error: {message: $m}}'
+            exit 1
+          fi
+          if [ "$status" != 200 ]; then
+            jq -n --arg s "$status" --rawfile b "$body" '
+              {error: {message: "usage request failed: HTTP \($s)", status: ($s | tonumber),
+                       response: (if $b == "" then null else ($b | try fromjson catch $b) end)}}'
+            exit 1
+          fi
+          cat "$body"
+
+  # Shared output: percentages, local reset dates rounded to a minute, JSON layout.
+  render:
+    internal: true
+    interactive: true  # Reads JSON from the calling task's pipe.
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          # A window nothing has used yet has no reset (the API sends null): it starts
+          # with the first request, so it would reset one window length from now.
+          result=$(jq --argjson now "$(date +%s)" '
+            map_values(map_values(if type != "object" then . else with_entries(
+              if (.value | type) == "object" and (.value | has("used_percentage")) and .value.reset_at == null
+              then .value.reset_at = ($now + (if .key == "five_hour" then 18000 else 604800 end))
+                   | .value.started = false
+              else . end) end))')
+          resets=$(printf '%s' "$result" | jq -r '
+            [.[][] | .[] | objects | select(has("used_percentage"))
+             | .reset_at | numbers | . + 30 | floor] | unique[]') || exit 1
+          dates='{}'
+          for reset in $resets; do
+            label=$("$CHORE_EXE" global:agents:reset-date "$reset") || exit 1
+            dates=$(printf '%s' "$dates" | jq --arg r "$reset" --arg label "$label" '
+              .[$r] = ($label | sub("(?<h>[+-][0-9]{2})(?<m>[0-9]{2})\\)$"; "\(.h):\(.m))"))') || exit 1
+          done
+          printf '%s\n' "$result" | jq --argjson dates "$dates" '
+            def window:
+              if type == "object" and has("used_percentage") then
+                (if (.used_percentage | type) == "number" then
+                   .remaining_percentage = ([100 - .used_percentage, 0] | max)
+                 else . end)
+                | if (.reset_at | type) == "number" then
+                    .reset_date = $dates[(.reset_at + 30 | floor | tostring)]
+                  else . end
+              else . end;
+            map_values(map_values(map_values(window)))'
+
+  # GNU date on Linux; BSD date on macOS. Both honour the machine's time zone.
+  reset-date:
+    internal: true
+    args: [epoch]
+    cmds:
+      - silent: true
+        cmd: |-
+          format='+%a %d %b %Y %H:%M %Z (UTC%z)'
+          date -d "@$EPOCH" "$format" 2>/dev/null || date -r "$EPOCH" "$format"
+
+  # Print one profile's OAuth token. macOS uses Keychain; Linux uses a JSON file.
+  claude-token:
+    internal: true
+    args: [dir]
+    cmds:
+      - silent: true
+        cmd: |-
+          set -u
+          if command -v security >/dev/null 2>&1; then
+            service="Claude Code-credentials-$(printf '%s' "$DIR" | shasum -a 256 | cut -c1-8)"
+            where="keychain item \"$service\""
+            credentials=$(security find-generic-password -s "$service" -w 2>/dev/null)
+          else
+            where="$DIR/.credentials.json"
+            credentials=$(cat "$where" 2>/dev/null)
+          fi
+          token=$(printf '%s' "${credentials:-}" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+          if [ -z "$token" ]; then
+            echo "no OAuth token in $where" >&2
+            exit 1
+          fi
+          printf '%s\n' "$token"

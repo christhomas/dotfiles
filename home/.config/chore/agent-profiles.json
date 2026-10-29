@@ -1,0 +1,14 @@
+{
+  "personal": {
+    "type": "claude",
+    "directory": "~/.claude-p"
+  },
+  "work": {
+    "type": "claude",
+    "directory": "~/.claude-w"
+  },
+  "default": {
+    "type": "codex",
+    "directory": "~/.codex"
+  }
+}

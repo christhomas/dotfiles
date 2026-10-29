@@ -1,0 +1,120 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(go build:*)",
+      "Bash(vagrant ssh:*)",
+      "Bash(ls:*)",
+      "Bash(task marketplace:submit -- plugins/infra-cron-scheduler/plugin.yaml)",
+      "Bash(curl -sk --cert /Volumes/sdcard256gb/projects/agentplatform/teamagentica/data/certs/admin-client.crt --key /Volumes/sdcard256gb/projects/agentplatform/teamagentica/data/certs/admin-client.key --cacert /Volumes/sdcard256gb/projects/agentplatform/teamagentica/data/certs/ca.crt https://localhost:8443/api/plugin/infra-cron-scheduler/dispatch/queue)",
+      "Bash(curl -s --cacert data/kernel/certs/ca.crt --cert data/kernel/certs/admin.crt --key data/kernel/certs/admin.key https://localhost:9600/api/aliases)",
+      "Bash(task plugin:build -- agent-claude --version 1.0.41)",
+      "Bash(find /Volumes/sdcard256gb/projects/agentplatform/teamagentica/plugins/tool-task-tracker -type f -name *.html -o -name *.js -o -name *.ts -o -name *.jsx -o -name *.tsx -o -name *.vue)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(curl -s http://localhost:3089/api/plugins/infra-cron-scheduler/proxy/dispatches/87e0e189-525c-4b29-9d28-9da82b918f01)",
+      "Bash(git -C /Volumes/sdcard256gb/projects/agentplatform/teamagentica status kernel/internal/handlers/aliases.go)",
+      "Bash(task plugin:build -- tool-stability --version 1.0.9)",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.34)",
+      "Bash(task build:*)",
+      "Bash(go test:*)",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.38)",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.46)",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.47)",
+      "WebSearch",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.50)",
+      "Bash(task plugin:build -- infra-agent-memory --version 0.2.6)",
+      "Bash(task plugin:build -- tool-seedance --version 2.0.18)",
+      "Bash(docker exec:*)",
+      "Bash(task kernel:connect)",
+      "Bash(curl -s -H \"Host: api.teamagentica.localhost\" http://localhost:80/api/health)",
+      "Bash(task --list-all)",
+      "Bash(task plugin:build -- agent-openai --version 1.0.19)",
+      "Bash(find /Volumes/sdcard256gb/projects/agentplatform/teamagentica -maxdepth 2 -name docker-compose* -o -name *network*)",
+      "Bash(find /Volumes/sdcard256gb/projects/agentplatform/teamagentica -type f -name docker-compose*)",
+      "Bash(task plugin:build -- infra-agent-memory --version 0.2.8)",
+      "Bash(curl -s http://localhost:5080/api/plugins/infra-agent-memory/proxy/schema)",
+      "Bash(task plugin:build -- infra-agent-relay --version 0.2.53)",
+      "Bash(docker stats:*)",
+      "Bash(find /Volumes/sdcard256gb/projects/agentplatform/teamagentica -name *api-client* -o -name @teamagentica*)",
+      "Bash(task plugin:build -- infra-agent-memory --version 0.3.8)",
+      "Read(//Volumes/sdcard256gb/projects/agentplatform/data/**)",
+      "Bash(sudo mount *)",
+      "Bash(sudo umount *)",
+      "mcp__pencil"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "model": "opus",
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "tldraw-offline",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/Users/christhomas/skills/tldraw-offline/inject-server-context.sh' SubagentStart"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": []
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/christhomas/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash $HOME/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "claude-mem@thedotmack": false,
+    "code-simplifier@claude-plugins-official": true,
+    "caveman@caveman": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "juliusbrussee/caveman"
+      }
+    }
+  },
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "tui": "fullscreen",
+  "autoDreamEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "switchModelsOnFlag": false,
+  "autoScrollEnabled": true,
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true
+}

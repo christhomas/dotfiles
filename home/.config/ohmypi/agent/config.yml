@@ -1,0 +1,39 @@
+symbolPreset: nerd
+composer:
+  shape: field
+theme:
+  dark: titanium
+setupVersion: 2
+modelRoles:
+  default: openai-codex/gpt-5.6-sol:high
+dev:
+  autoqaConsent: granted
+providers:
+  openai-codex:
+    codeMode: "on"
+codexResets:
+  autoRedeem: "no"
+statusLine:
+  preset: custom
+  leftSegments:
+    - model
+    - path
+    - git
+    - pr
+  rightSegments:
+    - context_pct
+    - cost
+    - usage
+  showHookStatus: false
+  segmentOptions:
+    model:
+      showThinkingLevel: true
+    path:
+      abbreviate: true
+      maxLength: 40
+      stripWorkPrefix: true
+    git:
+      showBranch: true
+      showStaged: true
+      showUnstaged: true
+      showUntracked: true

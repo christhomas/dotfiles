@@ -1,0 +1,82 @@
+#!/bin/zsh
+# Reconcile ~/.claude-p and ~/.claude-w onto the shared ~/.claude backend.
+# Runs once per entry: after it, the entry is a symlink and this is a no-op.
+# Files move (rsync --remove-source-files), they are not copied or deleted.
+# Usage: claude-link-migrate [--dry-run]
+
+set -u
+setopt null_glob
+
+DRY=0
+[[ "${1:-}" == "--dry-run" ]] && DRY=1
+
+CLAUDE_S=$HOME/.claude
+LOGINS=($HOME/.claude-p $HOME/.claude-w)
+
+SHARED_DIRS=(projects skills sessions session-env plugins hooks workgroups)
+SHARED_FILES=(settings.json)
+# Registries hold the union of installed plugins/marketplaces. Last-writer-wins
+# would drop the other login's entries, so these merge instead of overwrite.
+REGISTRIES=(plugins/installed_plugins.json plugins/known_marketplaces.json)
+
+ts=$(date +%Y%m%d-%H%M%S)
+BAK=$CLAUDE_S/backups/migrated-$ts
+
+run() { if (( DRY )); then print "  dry: $*"; else "$@" || print -u2 "  FAILED: $*"; fi }
+
+for d in $LOGINS; do
+  [[ -d $d ]] || continue
+  print "== $d"
+
+  for l in $SHARED_DIRS $SHARED_FILES; do
+    t=$CLAUDE_S/$l
+    [[ -L "$d/$l" ]] && continue          # already reconciled
+    [[ -e "$d/$l" ]] || continue          # nothing local; startup check links it
+
+    if [[ ! -e $t ]]; then                # shared side empty: seed wholesale
+      print "  seed      $l"
+      run mkdir -p "${t:h}"
+      run mv "$d/$l" "$t"
+      run ln -sfn "$t" "$d/$l"
+      continue
+    fi
+
+    if [[ -d "$d/$l" && -d $t ]]; then
+      print "  merge     $l"
+      excl=()
+      for r in $REGISTRIES; do [[ $r == $l/* ]] && excl+=(--exclude "${r#$l/}"); done
+      if (( DRY )); then
+        rsync -a --remove-source-files --dry-run --stats $excl "$d/$l/" "$t/" 2>/dev/null \
+          | grep -E 'files transferred' | sed 's/^/    /'
+      else
+        rsync -a --remove-source-files $excl "$d/$l/" "$t/"
+      fi
+
+      for r in $REGISTRIES; do            # union-merge, this login wins on key collision
+        [[ $r == $l/* && -f "$d/$r" && -f "$CLAUDE_S/$r" ]] || continue
+        print "  merge-json ${r:t}"
+        if (( ! DRY )); then
+          tmp=$(mktemp)
+          if jq -s '.[0] * .[1]' "$CLAUDE_S/$r" "$d/$r" > "$tmp" && [[ -s $tmp ]]; then
+            mv "$tmp" "$CLAUDE_S/$r"
+            run mkdir -p "$BAK/${d:t}/${r:h}" && mv "$d/$r" "$BAK/${d:t}/$r"
+          else
+            rm -f "$tmp"; print -u2 "  FAILED: jq merge $r"
+          fi
+        fi
+      done
+
+      (( DRY )) || find "$d/$l" -depth -type d -empty -delete 2>/dev/null
+    fi
+
+    # anything still here is a real file or an unmerged leftover: move it aside
+    if [[ -e "$d/$l" ]] && (( ! DRY )); then
+      print "  park      $l -> $BAK/${d:t}/$l"
+      mkdir -p "$BAK/${d:t}/${l:h}" && mv "$d/$l" "$BAK/${d:t}/$l"
+    fi
+    run ln -sfn "$t" "$d/$l"
+  done
+done
+
+print
+(( DRY )) && print "DRY RUN - nothing changed." || print "anything unmerged: $BAK"

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "tldraw-offline",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/Users/christhomas/skills/tldraw-offline/inject-server-context.sh' SubagentStart"
+          }
+        ]
+      }
+    ]
+  }
+}
