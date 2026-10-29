@@ -1,0 +1,11 @@
+{
+  "name": "binaryfindery",
+  "source_remote": "",
+  "source_commit": "",
+  "source_path": "/Volumes/sdcard256gb/projects/binaryfindery/.claude/skills/binaryfindery",
+  "installed_at": "2026-05-25T11:40:44Z",
+  "skipped_drifted": [],
+  "files": {
+    "skill.md": "2076e1bba0e834f96567a506ca41865768b24a14bf3d12004ffc95e5131199c4"
+  }
+}

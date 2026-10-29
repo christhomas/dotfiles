@@ -1,0 +1,12 @@
+{
+  "name": "install-skill",
+  "source_remote": "git@github.com:antimatter-studios/agent-skills.git",
+  "source_path": "/Volumes/sdcard256gb/projects/agent-skills/.claude/skills/install-skill",
+  "source_commit": "ae2cfd49cef0250f13325b178c6a20e7b4dffbf8",
+  "source_dirty": false,
+  "install_path": "/Users/christhomas/.claude/skills/install-skill",
+  "installed_at": "2026-06-22T09:43:43Z",
+  "updated_at": "2026-07-05T12:35:18Z",
+  "installed_into": [],
+  "skipped_drifted": []
+}

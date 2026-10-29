@@ -1,0 +1,225 @@
+{
+  "version": 2,
+  "plugins": {
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/frontend-design/1.1.1",
+        "version": "1.1.1",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-10-27T20:06:28.330Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/frontend-design/1.1.1",
+        "version": "1.1.1",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-28T15:40:06.876Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ],
+    "context7@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/context7/f8c5e7a1dcb7",
+        "version": "f8c5e7a1dcb7",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-10-27T20:06:28.339Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/context7/f8c5e7a1dcb7",
+        "version": "f8c5e7a1dcb7",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-28T15:40:06.883Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ],
+    "code-review@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/code-review/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-10-27T20:06:28.326Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/code-review/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-28T15:40:06.878Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ],
+    "github@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/github/f8c5e7a1dcb7",
+        "version": "f8c5e7a1dcb7",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-10-27T20:06:28.342Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/github/f8c5e7a1dcb7",
+        "version": "f8c5e7a1dcb7",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-28T15:40:06.884Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ],
+    "typescript-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/typescript-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-09-14T13:23:42.461Z"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/typescript-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-14T13:25:26.583Z"
+      }
+    ],
+    "commit-commands@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/commit-commands/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-10-27T20:06:28.333Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/commit-commands/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-28T15:40:06.879Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ],
+    "claude-md-management@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/claude-md-management/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-09-14T13:23:42.461Z"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/claude-md-management/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-14T13:25:26.583Z"
+      }
+    ],
+    "gopls-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/gopls-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-09-14T13:23:42.461Z"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/gopls-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-14T13:25:26.583Z"
+      }
+    ],
+    "code-simplifier@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/code-simplifier/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:23:42.461Z",
+        "lastUpdated": "2026-09-14T13:23:42.461Z"
+      },
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/code-simplifier/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-14T13:25:26.583Z"
+      }
+    ],
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-p/plugins/cache/claude-plugins-official/superpowers/7.0.0",
+        "version": "7.0.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-10-23T15:31:32.513Z",
+        "gitCommitSha": "bb92a77741419a4ab5f06e711a283343f1ada0c3"
+      },
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/superpowers/7.0.0",
+        "version": "7.0.0",
+        "installedAt": "2026-09-14T13:31:52.162Z",
+        "lastUpdated": "2026-10-16T01:32:22.833Z",
+        "gitCommitSha": "bb92a77741419a4ab5f06e711a283343f1ada0c3"
+      }
+    ],
+    "vercel@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/vercel/0.50.0",
+        "version": "0.50.0",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-28T09:06:41.133Z",
+        "gitCommitSha": "882e66c2698689324c341b7bb8fd8beb92c27bf6"
+      },
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/claude-plugins-official/vercel/0.50.0",
+        "version": "0.50.0",
+        "installedAt": "2026-09-14T13:31:52.162Z",
+        "lastUpdated": "2026-09-22T18:12:49.773Z",
+        "gitCommitSha": "882e66c2698689324c341b7bb8fd8beb92c27bf6"
+      }
+    ],
+    "caveman@caveman": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/christhomas",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/caveman/caveman/15581d14007f",
+        "version": "15581d14007f",
+        "installedAt": "2026-09-14T13:25:26.583Z",
+        "lastUpdated": "2026-09-14T13:25:26.583Z",
+        "gitCommitSha": "15581d14007fd01fb3f132016741962f34936ca2"
+      },
+      {
+        "scope": "user",
+        "installPath": "/Users/christhomas/.claude-w/plugins/cache/caveman/caveman/15581d14007f",
+        "version": "15581d14007f",
+        "installedAt": "2026-09-14T13:31:52.162Z",
+        "lastUpdated": "2026-09-14T13:31:52.162Z",
+        "gitCommitSha": "15581d14007fd01fb3f132016741962f34936ca2"
+      }
+    ]
+  }
+}

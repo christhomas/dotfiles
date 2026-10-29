@@ -1,0 +1,15 @@
+{
+  "version": 3,
+  "skills": {
+    "archify": {
+      "source": "git@github.com:tt-a1i/archify.git",
+      "sourceType": "git",
+      "sourceUrl": "git@github.com:tt-a1i/archify.git",
+      "skillPath": "archify/SKILL.md",
+      "skillFolderHash": "585a672278374b0ae7b58ea254f0f78f7b01fe36075b096717d376f44a9f5b83",
+      "installedAt": "2026-09-05T17:56:56.997Z",
+      "updatedAt": "2026-09-05T17:56:56.997Z"
+    }
+  },
+  "dismissed": {}
+}

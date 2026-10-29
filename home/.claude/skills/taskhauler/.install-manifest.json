@@ -1,0 +1,26 @@
+{
+  "name": "taskhauler",
+  "source_remote": "ssh://git@ssh.github.com:443/antimatter-studios/taskhauler.git",
+  "source_commit": "d662446aeadfcd57e7bf7c78a3894e503ac561dc",
+  "source_path": "/Volumes/sdcard256gb/projects/taskhauler",
+  "installed_at": "2026-05-20T18:48:33Z",
+  "previous_installed_at": "2026-05-20T17:51:19Z",
+  "previous_source_commit": "39bdf78c655b3f51a639fbdd19111577e79f5792",
+  "skipped_drifted": [],
+  "files": {
+    "SKILL.md": "3656cdc48c3021a4d745c04f72584a4ba23cac021c9dc4fc4241e06b78bfdd6b",
+    "templates/_preamble.sh": "4d8db294c83e02824d887715487233233fae921620590b79e8961eb1ca256450",
+    "templates/boards-create.sh": "e57df81ec8532365bbd98a69ed330cc53eb7913f24d91bf84c34c00493736a3f",
+    "templates/boards-list.sh": "d4ced1c0383c416203dbeb8a8e2c6d3239158dec82d6870ef8985fe671e31f05",
+    "templates/cards-create.sh": "f5b885fc66c961eef50a0a43cf4ba5cb4d2deb2d1d9dcbc5bf5b4d1380a5fa79",
+    "templates/cards-get-by-ref.sh": "11b71c91c21a4901e5d021b731e6e6250ed4a122eb6ca4da29291cd3173e617f",
+    "templates/cards-list.sh": "46f3b89cdb697371af894c092bd68178321c3c9bea21246b0a547b0c71207cf5",
+    "templates/cards-move.sh": "51f8d55f27033a7b522282cd3ae4ed31908ac3ccb6199756e6a62f5e07759e5d",
+    "templates/cards-search.sh": "03bb569f1a580eed359378444e69cf2b8544965affe53823dc3a84e070dec603",
+    "templates/columns-list.sh": "3dd136c1a6b47e5f42f6783241f20d810aaa7f95a61e7e9e00770d882b9ab707",
+    "templates/comments-add.sh": "1711421c4678b8cb316c1bcb6a956e093e2844573cfa59a642b3ea0e8fe3df51",
+    "templates/epics-list.sh": "02a33d21834a30dc770291f15847f378ade6ff19baa147db9f2938476392ba30",
+    "templates/service-accounts-list.sh": "b5ce7dd775740c212cfa93a012199c6e9df321b3444041952fa1fb818640abdd",
+    "templates/url-build.sh": "379ada4337b1879cb5b52b764ec1685192ca3472b8bda9a9c228d7b326ec84f3"
+  }
+}
